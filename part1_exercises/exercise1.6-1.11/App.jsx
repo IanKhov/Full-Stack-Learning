@@ -6,6 +6,43 @@ const Button = (props) => (
   </button>
 )
 
+const Statistics = (props) => {
+  if (props.total === 0) {
+    return (
+      <div>
+        <h1>statistics</h1>
+        <p>No feedback given</p>
+      </div>
+    )
+  }
+
+  const average = (props.good - props.bad) / props.total
+  const positive = (props.good / props.total) * 100
+
+  return (
+    <div>
+      <h1>statistics</h1>
+      <table>
+        <tbody>
+          <StatisticLine text="good" value={props.good} />
+          <StatisticLine text="neutral" value={props.neutral} />
+          <StatisticLine text="bad" value={props.bad} />
+          <StatisticLine text="all" value={props.total} />
+          <StatisticLine text="average" value={average} />
+          <StatisticLine text="positive" value={`${positive}%`} />
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+const StatisticLine = (props) => (
+  <tr>
+    <td>{props.text}</td>
+    <td>{props.value}</td>
+  </tr>
+)
+
 const App = () => {
   // save clicks of each button to its own state
   const [good, setGood] = useState(0)
@@ -31,22 +68,6 @@ const App = () => {
     setTotal(good + updatedNeutral + bad)
   }
 
-  const Average = ({ good, bad, total }) => {
-    if (total === 0) {
-      return 0
-    }
-
-    return (good - bad) / total
-  }
-
-  const Positive = ({ good, total }) => {
-    if (total === 0) {
-      return '0%'
-    }
-
-    return `${((good / total) * 100)}%`
-  }
-
   return (
     <div>
         <h1>give feedback</h1>
@@ -54,13 +75,13 @@ const App = () => {
         <Button onClick={handleNeutral} text={"neutral"}/>
         <Button onClick={handleBad} text={"bad"}/>
 
-        <h1>statistics</h1>
-        <p>good {good}</p>
-        <p>neutral {neutral}</p>
-        <p>bad {bad}</p>
-        <p>all {total}</p>
-        <p>average <Average good={good} bad={bad} total={total} /></p>
-        <p>positive <Positive good={good} total={total} /></p>
+        <Statistics
+          good={good}
+          neutral={neutral}
+          bad={bad}
+          total={total}
+        />
+
     </div>
   )
 }
