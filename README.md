@@ -1,3 +1,3 @@
 # Full-Stack
-Part1 of Full Stack Journey <br>
+Start of Full Stack Journey <br>
 Using https://fullstackopen.com/en/about/ to learn Full Stack 
