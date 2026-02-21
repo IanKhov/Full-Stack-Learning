@@ -20,10 +20,10 @@ const noteSchema = new mongoose.Schema({
 
 const Note = mongoose.model('Note', noteSchema)
 
-const note = new Note({
-  content: 'CSS is hard',
-  important: true,
-})
+// const note = new Note({
+//   content: 'CSS is hard',
+//   important: true,
+// })
 
 Note.find({}).then(result => {
   result.forEach(note => {
