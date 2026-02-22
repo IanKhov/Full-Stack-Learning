@@ -20,8 +20,10 @@ app.get('/api/persons', (request, response) => {
 })
 
 app.get('/info', (request, response) => {
-    const now = new Date()
-    response.send("Phonebook has info for " + persons.length + " people" + "<p></p>" + now)
+  const now = new Date()
+  Person.countDocuments({}).then(count => {
+    response.send("Phonebook has info for " + count + " people" + "<p></p>" + now)
+  })
 })
 
 app.get('/api/persons/:id', (request, response) => {
@@ -34,47 +36,69 @@ app.get('/api/persons/:id', (request, response) => {
     })
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = request.params.id
-    persons = persons.filter(person => person.id !== id)
-
-    response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+    Person.findByIdAndDelete(request.params.id)
+      .then(result => {
+        response.status(204).end()
+      })
+      .catch(error => next(error))
 })
 
-const generateId = () => {
-  const maxId = persons.length > 0
-    ? Math.max(...persons.map(n => Number(n.id)))
-    : 0
-  return String(maxId + 1)
-}
-
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body
-    const name = body.name
 
-    if (!name || !body.number) {
+    if (!body.name || !body.number) {
         return response.status(400).json({ 
             error: 'name or number is missing' 
         })
     }
 
-    // const exists = persons.find(person => person.name === name)
-    // if (exists) {
-    //     return response.status(400).json({
-    //         error: 'name must be unique'
-    //     })
-    // }
-
     const person = new Person({
-        id: generateId(),
         name: body.name,
         number: body.number
     })
 
-    person.save().then((savedPerson) => {
-        response.json(savedPerson)
-    })
+    person.save()
+      .then((savedPerson) => {
+        response.status(201).json(savedPerson)
+      })
+      .catch(error => next(error))
 })
+
+app.put('/api/persons/:id', (request, response, next) => {
+  const body = request.body
+
+  const person = {
+    name: body.name,
+    number: body.number
+  }
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true, runValidators: true, context: 'query' })
+    .then(updatedPerson => {
+      if (updatedPerson) {
+        response.json(updatedPerson)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch(error => next(error))
+})
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+  if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
+
+  next(error)
+}
+
+// this has to be the last loaded middleware, also all the routes should be registered before this!
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
