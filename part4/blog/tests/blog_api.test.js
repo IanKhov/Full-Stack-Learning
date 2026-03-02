@@ -92,6 +92,48 @@ test('missing url returns 400', async () => {
       .expect(400)
 })
 
+test('blog likes can be updated', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToUpdate = blogsAtStart[0]
+
+    const updatedBlog = {
+        likes: 100
+    }
+
+    const response = await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(updatedBlog)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    assert.strictEqual(response.body.likes, 100)
+    assert.strictEqual(response.body.id, blogToUpdate.id)
+})
+
+test('updating non-existent blog returns 404', async () => {
+    const fakeId = new mongoose.Types.ObjectId()
+
+    await api
+      .put(`/api/blogs/${fakeId}`)
+      .send({ likes: 50 })
+      .expect(404)
+})
+
+test('blog can be deleted', async () => {
+    const blogsAtStart = await helper.blogsInDb()
+    const blogToDelete = blogsAtStart[0]
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(204)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    assert.strictEqual(blogsAtEnd.length, blogsAtStart.length - 1)
+
+    const ids = blogsAtEnd.map(blog => blog.id)
+    assert(!ids.includes(blogToDelete.id))
+})
+
 after(async () => {
   await mongoose.connection.close()
 })
