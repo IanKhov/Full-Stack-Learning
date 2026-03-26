@@ -20,6 +20,15 @@ const App = () => {
     })
   }, [])
 
+  useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem('loggedNoteappUser')
+    if (loggedUserJSON) {
+      const user = JSON.parse(loggedUserJSON)
+      setUser(user)
+      noteService.setToken(user.token)
+    }
+  }, [])
+
   const addNote = event => {
     event.preventDefault()
     const noteObject = {
@@ -58,6 +67,10 @@ const App = () => {
     
     try {
       const user = await loginService.login({ username, password })
+      window.localStorage.setItem(
+        'loggedNoteappUser', JSON.stringify(user)
+      ) 
+      noteService.setToken(user.token)
       setUser(user)
       setUsername('')
       setPassword('')
@@ -75,35 +88,51 @@ const App = () => {
 
   const notesToShow = showAll ? notes : notes.filter(note => note.important)
 
+  const loginForm = () => (
+    <form onSubmit={handleLogin}>
+      <div>
+        <label>
+          username
+          <input
+            type="text"
+            value={username}
+            onChange={({ target }) => setUsername(target.value)}
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          password
+          <input
+            type="password"
+            value={password}
+            onChange={({ target }) => setPassword(target.value)}
+          />
+        </label>
+      </div>
+      <button type="submit">login</button>
+    </form>
+  )
+
+  const noteForm = () => (
+    <form onSubmit={addNote}>
+      <input value={newNote} onChange={handleNoteChange} />
+      <button type="submit">save</button>
+    </form>
+  )
+
   return (
     <div>
       <h1>Notes</h1>
       <Notification message={errorMessage} />
 
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
+      {!user && loginForm()}
+      {user && (
         <div>
-          <label>
-            username
-            <input
-              type="text"
-              value={username}
-              onChange={({ target }) => setUsername(target.value)}
-            />
-          </label>
+          <p>{user.name} logged in</p>
+          {noteForm()}
         </div>
-        <div>
-          <label>
-            password
-            <input
-              type="password"
-              value={password}
-              onChange={({ target }) => setPassword(target.value)}
-            />
-          </label>
-        </div>
-        <button type="submit">login</button>
-      </form>
+      )}
 
       <div>
         <button onClick={() => setShowAll(!showAll)}>
