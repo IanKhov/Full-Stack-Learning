@@ -42,12 +42,21 @@ const Blog = ({ blog, onLike, onDelete, currentUser }) => {
         <div className="blogDetails">
           <div>{blog.url}</div>
           <div>{blog.likes} likes <button onClick={handleLike}>like</button></div>
-          <div>{blog.user.name}</div>
+          <div>{typeof blog.user === 'object' && blog.user ? blog.user.name : ''}</div>
           {(() => {
             const blogUser = blog.user
-            const blogUsername = blogUser && (blogUser.username || blogUser.name)
+            const blogUsername = typeof blogUser === 'object' && blogUser
+              ? (blogUser.username || blogUser.name)
+              : null
+            const blogUserId = typeof blogUser === 'string'
+              ? blogUser
+              : blogUser && (blogUser.id || blogUser._id)
             const currentUsername = currentUser && currentUser.username
-            if (currentUsername && blogUsername && currentUsername === blogUsername) {
+            const currentUserId = currentUser && (currentUser.id || currentUser._id)
+            const sameByUsername = Boolean(currentUsername && blogUsername && currentUsername === blogUsername)
+            const sameById = Boolean(currentUserId && blogUserId && currentUserId === blogUserId)
+
+            if (sameByUsername || sameById) {
               return <div><button onClick={handleDelete}>remove</button></div>
             }
             return null

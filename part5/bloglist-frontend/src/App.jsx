@@ -12,14 +12,13 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState(null)
-  const [loginVisible, setLoginVisible] = useState(false)
 
   const blogFormRef = useRef()
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
       setBlogs( blogs )
-    )  
+    )
   }, [])
 
   useEffect(() => {
@@ -80,43 +79,18 @@ const App = () => {
   const handleLike = async (id, updatedBlog) => {
     try {
       const returned = await blogService.update(id, updatedBlog)
-      setBlogs(blogs.map(b => (b.id === id || b._id === id) ? returned : b))
+      setBlogs(blogs.map(b => {
+        if (b.id === id || b._id === id) {
+          const hasUserObject = typeof returned.user === 'object' && returned.user !== null
+          return hasUserObject ? returned : { ...returned, user: b.user }
+        }
+        return b
+      }))
     } catch (error) {
       console.error('like failed', error)
       setMessage({ text: 'error updating likes', type: 'error' })
       setTimeout(() => setMessage(null), 5000)
     }
-  }
-
-  const handleDelete = async (id) => {
-    try {
-      
-    } catch {
-      
-    }
-  }
-
-  const loginForm = () => {
-    const hideWhenVisible = { display: loginVisible ? 'none' : '' }
-    const showWhenVisible = { display: loginVisible ? '' : 'none' }
-
-    return (
-      <div>
-        <div style={hideWhenVisible}>
-          <button onClick={() => setLoginVisible(true)}>log in</button>
-        </div>
-        <div style={showWhenVisible}>
-          <LoginForm
-            username={username}
-            password={password}
-            handleUsernameChange={({ target }) => setUsername(target.value)}
-            handlePasswordChange={({ target }) => setPassword(target.value)}
-            handleSubmit={handleLogin}
-          />
-          <button onClick={() => setLoginVisible(false)}>cancel</button>
-        </div>
-      </div>
-    )
   }
 
   if (user === null) {
